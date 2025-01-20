@@ -1,0 +1,121 @@
+#include <DHT.h>
+
+// Configuración del DHT
+#define DHTPIN 15     // Pin de datos del sensor DHT
+#define DHTTYPE DHT11 // Cambiar a DHT22 si usas ese modelo
+DHT dht(DHTPIN, DHTTYPE);
+
+// Pines para LEDs y buzzer
+#define LED_LOW 25  // LED para temperaturas < 20°C
+#define LED_HIGH 26 // LED para temperaturas > 20°C
+#define BUZZER 27   // Buzzer para temperaturas > 40°C
+
+// Pines para el sensor infrarrojo de proximidad
+#define IR_SENSOR 14
+#define LED_IR_PROXIMITY 12 // LED para detección de proximidad 2-20 mm
+
+// Pines para el sensor ultrasónico HC-SR04
+#define TRIG_PIN 32 // Pin TRIG
+#define ECHO_PIN 33 // Pin ECHO
+#define LED_DISTANCE 13 // LED para distancia < 20 cm
+
+// Variables
+float temperatura;
+bool objetoDetectadoIR;
+long duracionUltrasonico;
+float distanciaUltrasonico;
+
+void setup() {
+  // Inicialización del puerto serial
+  Serial.begin(115200);
+
+  // Inicialización del sensor DHT
+  dht.begin();
+
+  // Configuración de pines
+  pinMode(LED_LOW, OUTPUT);
+  pinMode(LED_HIGH, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
+  pinMode(LED_IR_PROXIMITY, OUTPUT);
+  pinMode(LED_DISTANCE, OUTPUT);
+  pinMode(IR_SENSOR, INPUT);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  // Estado inicial
+  digitalWrite(LED_LOW, LOW);
+  digitalWrite(LED_HIGH, LOW);
+  digitalWrite(BUZZER, LOW);
+  digitalWrite(LED_IR_PROXIMITY, LOW);
+  digitalWrite(LED_DISTANCE, LOW);
+
+  Serial.println("Iniciando lectura de sensores...");
+}
+
+void loop() {
+  // Leer temperatura del DHT
+  temperatura = dht.readTemperature();
+
+  // Validar si la lectura es válida
+  if (isnan(temperatura)) {
+    Serial.println("Error al leer el sensor DHT");
+    return;
+  }
+
+  // Control de LEDs y buzzer según la temperatura
+  if (temperatura < 26) {
+    digitalWrite(LED_LOW, HIGH);
+    digitalWrite(LED_HIGH, LOW);
+    digitalWrite(BUZZER, LOW);
+  } else if (temperatura >= 26 && temperatura <= 26.8) {
+    digitalWrite(LED_LOW, LOW);
+    digitalWrite(LED_HIGH, HIGH);
+    digitalWrite(BUZZER, LOW);
+  } else if (temperatura > 30) {
+    digitalWrite(LED_LOW, LOW);
+    digitalWrite(LED_HIGH, LOW);
+    digitalWrite(BUZZER, HIGH);
+  }
+
+  // Leer estado del sensor infrarrojo de proximidad
+  objetoDetectadoIR = digitalRead(IR_SENSOR) == LOW; // LOW indica detección
+
+  if (objetoDetectadoIR) {
+    digitalWrite(LED_IR_PROXIMITY, HIGH);
+    Serial.println("Objeto detectado cerca (2-20 mm)");
+  } else {
+    digitalWrite(LED_IR_PROXIMITY, LOW);
+    Serial.println("No hay objeto en proximidad (IR)");
+  }
+
+  // Leer distancia del sensor ultrasónico
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  duracionUltrasonico = pulseIn(ECHO_PIN, HIGH);
+  distanciaUltrasonico = duracionUltrasonico * 0.034 / 2; // Conversión a cm
+
+  if (distanciaUltrasonico < 20) {
+    digitalWrite(LED_DISTANCE, HIGH);
+    Serial.print("Distancia ultrasónica: ");
+    Serial.print(distanciaUltrasonico);
+    Serial.println(" cm (Objeto cercano)");
+  } else {
+    digitalWrite(LED_DISTANCE, LOW);
+    Serial.print("Distancia ultrasónica: ");
+    Serial.print(distanciaUltrasonico);
+    Serial.println(" cm");
+  }
+
+  // Mostrar temperatura en el monitor serial
+  Serial.print("Temperatura: ");
+  Serial.print(temperatura);
+  Serial.println(" °C");
+
+  // Actualizar cada 1 segundo
+  delay(1000);
+}
+
