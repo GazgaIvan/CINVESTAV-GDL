@@ -1,0 +1,28 @@
+#define SENSOR_PIN 34  // Pin analógico conectado al sensor de presión
+#define LED_PIN 2      // Pin digital conectado al LED
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);        // Configura el pin del LED como salida
+  digitalWrite(LED_PIN, LOW);      // Apaga el LED inicialmente
+  Serial.begin(115200);            // Inicia la comunicación serial
+  Serial.println("Iniciando...");  // Mensaje inicial
+}
+
+void loop() {
+  int sensorValue = analogRead(SENSOR_PIN); // Lee el valor analógico del sensor
+  int threshold = 1000;                    // Define un umbral para detectar presión
+
+  // Imprime el valor actual del sensor
+  Serial.print("Valor del sensor: ");
+  Serial.println(sensorValue);
+
+  if (sensorValue > threshold) {           // Si la presión supera el umbral
+    Serial.println("Sentado");             // Envía el mensaje a la terminal serial
+    digitalWrite(LED_PIN, HIGH);           // Enciende el LED
+  } else {                                 // Si no hay presión
+    Serial.println("No sentado");          // Mensaje en caso contrario
+    digitalWrite(LED_PIN, LOW);            // Apaga el LED
+  }
+
+  delay(500); // Pausa de medio segundo para evitar lecturas excesivas
+}
