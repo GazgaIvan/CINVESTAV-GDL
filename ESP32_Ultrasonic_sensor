@@ -1,0 +1,34 @@
+By:
+const int trigPin = 18;
+const int echoPin = 5;
+const int led = 4;
+float duration, distance;
+// declaracion de pines 
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(led, OUTPUT);
+  
+  Serial.begin(9600);
+}
+
+void loop() {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+//Ciclo en  el que se envia y recive señal del sesnro constantemente 
+  duration = pulseIn(echoPin, HIGH);
+  distance = (duration*.0343)/2;
+ //Formula para calcular distancia medida en "cm"
+  if (distance <= 20){// Ciclo en el que se puede cambia la distancia a la que quieras que sea detectada 
+    digitalWrite(led,  HIGH);
+    Serial.print("Distance: ");
+    Serial.println(distance);
+  }
+  else {
+    digitalWrite(led,  LOW);
+  }
+  delay(1000);
+}
