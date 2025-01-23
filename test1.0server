@@ -1,0 +1,44 @@
+import socket
+import threading
+
+# Configuración del servidor
+host = '10.0.5.228'  # Dirección local
+port = 65432            # Puerto
+
+# Crear un socket de servidor
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Vincular el socket al puerto y la dirección
+server_socket.bind((host, port))
+
+# Hacer que el servidor escuche conexiones entrantes
+server_socket.listen(5)
+print(f"Servidor escuchando en {host}:{port}")
+
+# Función para manejar un cliente
+def handle_client(conn, addr):
+    print(f"Conexión establecida con {addr}")
+    try:
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            print(f"Mensaje recibido de {addr}: {data.decode()}")
+    except ConnectionResetError:
+        print(f"El cliente {addr} cerró la conexión.")
+    finally:
+        conn.close()
+        print(f"Conexión cerrada con {addr}")
+
+# Ciclo principal del servidor
+try:
+    while True:
+        conn, addr = server_socket.accept()
+        # Crear un hilo para manejar cada cliente
+        client_thread = threading.Thread(target=handle_client, args=(conn, addr), daemon=True)
+        client_thread.start()
+except KeyboardInterrupt:
+    print("\nServidor detenido manualmente.")
+finally:
+    server_socket.close()
+    print("Servidor cerrado.")
